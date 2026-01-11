@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  Example CloudFormation template demonstrating basic structure.
+  This is a minimal placeholder - extend or replace for your use case.
+
+  Common extensions:
+  - Add Lambda functions, API Gateway, DynamoDB tables
+  - Add VPC, subnets, security groups for networking
+  - Add IAM roles and policies for service permissions
+  - Add S3 buckets, CloudFront distributions for static hosting
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Deployment environment
+
+  ProjectName:
+    Type: String
+    Default: portfolio-app
+    Description: Name used for resource naming and tagging
+
+Resources:
+  # Example S3 bucket with security best practices
+  ExampleBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${ProjectName}-${Environment}-${AWS::AccountId}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  # Example CloudWatch Log Group
+  ExampleLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/app/${ProjectName}/${Environment}'
+      RetentionInDays: 30
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+
+Outputs:
+  BucketName:
+    Description: Name of the created S3 bucket
+    Value: !Ref ExampleBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketName'
+
+  BucketArn:
+    Description: ARN of the created S3 bucket
+    Value: !GetAtt ExampleBucket.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketArn'
+
+  LogGroupName:
+    Description: Name of the CloudWatch Log Group
+    Value: !Ref ExampleLogGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-LogGroupName'
